@@ -59,6 +59,9 @@ namespace Osmium {
                   m_count_ways_in_all_areas(0) {
             }
 
+            virtual ~Multipolygon() {
+            }
+
             // in pass 1
             void relation(const shared_ptr<Osmium::OSM::Relation const>& relation) {
                 const char* type = relation->tags().get_tag_by_key("type");
@@ -113,7 +116,7 @@ namespace Osmium {
                 way2areaidx_t::const_iterator way2areaidx_iterator(m_way2areaidx.find(way->id()));
 
                 if (way2areaidx_iterator == m_way2areaidx.end()) { // not in any relation
-                    if (way->is_closed() && way->node_count() >= 4) { // way is closed and has enough nodes, build simple multipolygon
+                    if (way->is_closed() && way->node_count() >= 4 && keep_simple_way(way)) { // way is closed and has enough nodes, build simple multipolygon
 #ifdef OSMIUM_WITH_GEOS
                         Osmium::Geometry::Polygon polygon(*way);
                         Osmium::OSM::AreaFromWay* area = new Osmium::OSM::AreaFromWay(way.get(), polygon.create_geos_geometry());
@@ -171,6 +174,13 @@ namespace Osmium {
                 Osmium::OSM::AreaFromRelation::print_timings();
 #endif // OSMIUM_WITH_MULTIPOLYGON_PROFILING
             }
+
+        protected:
+
+            virtual bool keep_simple_way(const shared_ptr<Osmium::OSM::Way>& way) {
+                return true;
+            }
+
 
         }; // class Multipolygon
 
